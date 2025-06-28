@@ -13,7 +13,6 @@ public class DataInitializer implements CommandLineRunner {
     
     @Override
     public void run(String... args) throws Exception {
-        // Inicializar el juego con la configuración por defecto
         buscaminasService.inicializarJuego();
     }
 }

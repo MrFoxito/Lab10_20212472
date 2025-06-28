@@ -1,198 +1,69 @@
+<!-- Para el unico html se ha decidido usar bootstrap como la mayoria de labs-->
+
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscaminas - STF Games</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            border: 2px solid #333;
-            padding: 20px;
-        }
-        
-        .title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        
-        .input-section {
-            margin-bottom: 20px;
-        }
-        
-        .input-label {
-            display: inline-block;
-            margin-right: 10px;
-            color: #666;
-        }
-        
-        .coordinate-input {
-            width: 100px;
-            padding: 5px;
-            border: 1px solid #ccc;
-            margin-right: 10px;
-        }
-        
-        .explotar-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        
-        .explotar-btn:hover {
-            background-color: #0056b3;
-        }
-        
-        .explotar-btn:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-        
-        .reiniciar-btn {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            cursor: pointer;
-            border-radius: 4px;
-            margin-left: 10px;
-        }
-        
-        .reiniciar-btn:hover {
-            background-color: #1e7e34;
-        }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(6, 50px);
-            grid-template-rows: repeat(6, 50px);
-            gap: 1px;
-            margin: 20px 0;
-            border: 2px solid #333;
-            width: fit-content;
-        }
-        
-        .cell {
-            width: 50px;
-            height: 50px;
-            border: 1px solid #999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .cell:hover {
-            border-color: #007bff;
-            box-shadow: 0 0 3px rgba(0, 123, 255, 0.3);
-        }
-        
-        .cell-hidden {
-            background-color: #87CEEB; /* Azul claro como en las imágenes */
-        }
-        
-        .cell-revealed {
-            background-color: #90EE90; /* Verde claro como en las imágenes */
-        }
-        
-        .cell-bomb {
-            background-color: #FF69B4; /* Rosa como en las imágenes */
-        }
-        
-        .message {
-            margin: 20px 0;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        
-        .message-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .message-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .message-warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .message-info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="title">Encuentre todo el cobre para ganar el juego</div>
-        
-        <div class="input-section">
-            <div>
-                <span class="input-label">Coordenada a explotar de la mina:</span>
-                <input type="text" id="coordenadas" class="coordinate-input" placeholder="ej: 1 5" required>
-                <button type="button" id="explotar-btn" class="explotar-btn">Explotar</button>
-                <button type="button" id="reiniciar-btn" class="reiniciar-btn">Nuevo Juego</button>
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3>Encuentre todo el cobre para ganar el juego</h3>
             </div>
-        </div>
-        
-        <!-- Mensaje de estado -->
-        <div id="mensaje" class="message" style="display: none;">
-            <span id="mensaje-texto"></span>
-        </div>
-        
-        <!-- Grilla del juego -->
-        <div id="grid" class="grid">
-            <!-- Generar grilla de 6x6 -->
-            <div th:each="fila : ${#numbers.sequence(1, 6)}" th:remove="tag">
-                <div th:each="col : ${#numbers.sequence(1, 6)}" class="cell cell-hidden" 
-                     th:id="${'cell_' + fila + '_' + col}"
-                     th:data-x="${fila}" th:data-y="${col}">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Coordenada a explotar de la mina:</label>
+                        <div class="input-group">
+                            <input type="text" id="coordenadas" class="form-control" placeholder="ej: 1 5" required>
+                            <button type="button" id="explotar-btn" class="btn btn-primary">Explotar</button>
+                            <button type="button" id="reiniciar-btn" class="btn btn-success">Nuevo Juego</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="mensaje" class="alert" style="display:none;" role="alert">
+                    <span id="mensaje-texto"></span>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-bordered" id="grid-table" style="width: auto;">
+                            <tr th:each="fila : ${#numbers.sequence(1, 6)}">
+                                <td th:each="col : ${#numbers.sequence(1, 6)}" 
+                                    class="text-center cell-buscaminas"
+                                    style="width:50px; height:50px; background-color:#87CEEB; cursor:pointer;"
+                                    th:id="${'cell_' + fila + '_' + col}"
+                                    th:data-x="${fila}" th:data-y="${col}">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Estado del Juego</h5>
+                                <p class="card-text">Intentos restantes: <span id="intentos-restantes" class="badge bg-info" th:text="${configuracion.cantIntentosActual}"></span></p>
+                                <p class="card-text">Estado: <span id="estado-juego" class="badge bg-secondary" th:text="${estadoJuego}"></span></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Información del juego -->
-        <div style="margin-top: 20px; color: #666;">
-            <p>Intentos restantes: <span id="intentos-restantes" th:text="${configuracion.cantIntentosActual}"></span></p>
-            <p>Estado del juego: <span id="estado-juego" th:text="${estadoJuego}"></span></p>
         </div>
     </div>
 
     <script>
-        // Variables globales
         let juegoActivo = true;
 
-        // Cargar estado inicial del juego
         document.addEventListener('DOMContentLoaded', function() {
             cargarEstadoJuego();
         });
 
-        // Event listeners
         document.getElementById('explotar-btn').addEventListener('click', function() {
             const coordenadas = document.getElementById('coordenadas').value.trim();
             if (!coordenadas) {
@@ -227,9 +98,8 @@
             realizarMovimiento(x, y);
         });
 
-        // Event listener para clic en celdas
         document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('cell') && e.target.classList.contains('cell-hidden')) {
+            if (e.target.classList.contains('cell-buscaminas') && e.target.style.backgroundColor === 'rgb(135, 206, 235)') {
                 const x = parseInt(e.target.getAttribute('data-x'));
                 const y = parseInt(e.target.getAttribute('data-y'));
                 
@@ -238,7 +108,6 @@
                     return;
                 }
                 
-                // Actualizar el input con las coordenadas
                 document.getElementById('coordenadas').value = `${x} ${y}`;
                 realizarMovimiento(x, y);
             }
@@ -248,14 +117,12 @@
             reiniciarJuego();
         });
 
-        // Permitir explotar con Enter
         document.getElementById('coordenadas').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 document.getElementById('explotar-btn').click();
             }
         });
 
-        // Funciones AJAX
         function cargarEstadoJuego() {
             fetch('/api/buscaminas/estado')
                 .then(response => response.json())
@@ -283,7 +150,6 @@
                 if (data.mensaje) {
                     mostrarMensaje(data.mensaje, obtenerTipoMensaje(data.mensaje));
                 }
-                // Limpiar el input después de un movimiento exitoso
                 document.getElementById('coordenadas').value = '';
             })
             .catch(error => {
@@ -298,15 +164,10 @@
             })
             .then(response => response.text())
             .then(data => {
-                // Limpiar la grilla
                 limpiarGridla();
-                // Cargar nuevo estado
                 cargarEstadoJuego();
-                // Ocultar mensaje
                 document.getElementById('mensaje').style.display = 'none';
-                // Limpiar input
                 document.getElementById('coordenadas').value = '';
-                // Reactivar juego
                 juegoActivo = true;
                 mostrarMensaje('¡Nuevo juego iniciado!', 'success');
             })
@@ -317,62 +178,67 @@
         }
 
         function actualizarInterfaz(data) {
-            // Actualizar información del juego
             document.getElementById('intentos-restantes').textContent = data.configuracion.cantIntentosActual;
             
-            // Actualizar estado del juego
             const estadoElement = document.getElementById('estado-juego');
             estadoElement.textContent = obtenerTextoEstado(data.estadoJuego);
-            estadoElement.style.color = obtenerColorEstado(data.estadoJuego);
+            
+            estadoElement.className = 'badge';
+            if (data.estadoJuego === 'ganado') {
+                estadoElement.classList.add('bg-success');
+            } else if (data.estadoJuego === 'perdido') {
+                estadoElement.classList.add('bg-danger');
+            } else {
+                estadoElement.classList.add('bg-primary');
+            }
 
-            // Verificar si el juego ha terminado
             if (data.estadoJuego === 'ganado' || data.estadoJuego === 'perdido') {
                 juegoActivo = false;
             } else {
                 juegoActivo = true;
             }
 
-            // Actualizar grilla
             actualizarGridla(data.gridMap);
         }
 
         function actualizarGridla(gridMap) {
-            for (let fila = 1; fila <= 6; fila++) {
-                for (let col = 1; col <= 6; col++) {
-                    const cellId = `cell_${fila}_${col}`;
-                    const cell = document.getElementById(cellId);
-                    const coordKey = `${fila}_${col}`;
+            const tabla = document.getElementById('grid-table');
+            const celdas = tabla.getElementsByTagName('td');
+            
+            for (let i = 0; i < celdas.length; i++) {
+                const celda = celdas[i];
+                const x = celda.getAttribute('data-x');
+                const y = celda.getAttribute('data-y');
+                const coordKey = `${x}_${y}`;
+                
+                if (gridMap && gridMap[coordKey]) {
+                    const movimiento = gridMap[coordKey];
                     
-                    if (gridMap && gridMap[coordKey]) {
-                        const movimiento = gridMap[coordKey];
-                        
-                        // Limpiar clases previas
-                        cell.className = 'cell';
-                        
-                        if (movimiento.esBomba) {
-                            cell.classList.add('cell-bomb');
-                            cell.textContent = '💣';
-                        } else {
-                            cell.classList.add('cell-revealed');
-                            cell.textContent = movimiento.numeroVecinas > 0 ? movimiento.numeroVecinas : '';
-                        }
+                    if (movimiento.esBomba) {
+                        celda.style.backgroundColor = '#dc3545';
+                        celda.textContent = '💣';
+                        celda.classList.add('table-danger');
                     } else {
-                        // Celda no descubierta
-                        cell.className = 'cell cell-hidden';
-                        cell.textContent = '';
+                        celda.style.backgroundColor = '#198754';
+                        celda.textContent = movimiento.numeroVecinas > 0 ? movimiento.numeroVecinas : '';
+                        celda.classList.add('table-success');
                     }
+                } else {
+                    celda.style.backgroundColor = '#87CEEB';
+                    celda.textContent = '';
+                    celda.classList.remove('table-danger', 'table-success');
                 }
             }
         }
 
         function limpiarGridla() {
-            for (let fila = 1; fila <= 6; fila++) {
-                for (let col = 1; col <= 6; col++) {
-                    const cellId = `cell_${fila}_${col}`;
-                    const cell = document.getElementById(cellId);
-                    cell.className = 'cell cell-hidden';
-                    cell.textContent = '';
-                }
+            const tabla = document.getElementById('grid-table');
+            const celdas = tabla.getElementsByTagName('td');
+            
+            for (let i = 0; i < celdas.length; i++) {
+                celdas[i].style.backgroundColor = '#87CEEB';
+                celdas[i].textContent = '';
+                celdas[i].classList.remove('table-danger', 'table-success');
             }
         }
 
@@ -381,14 +247,24 @@
             const mensajeTexto = document.getElementById('mensaje-texto');
             
             mensajeTexto.textContent = texto;
-            mensajeDiv.className = `message message-${tipo}`;
+
+            mensajeDiv.className = 'alert';
+            if (tipo === 'success') {
+                mensajeDiv.classList.add('alert-success');
+            } else if (tipo === 'danger' || tipo === 'error') {
+                mensajeDiv.classList.add('alert-danger');
+            } else if (tipo === 'warning') {
+                mensajeDiv.classList.add('alert-warning');
+            } else {
+                mensajeDiv.classList.add('alert-info');
+            }
+            
             mensajeDiv.style.display = 'block';
             
-            // Auto-ocultar después de 5 segundos para mensajes de error
-            if (tipo === 'error') {
+            if (tipo === 'error' || tipo === 'danger') {
                 setTimeout(() => {
                     mensajeDiv.style.display = 'none';
-                }, 5000);
+                }, 4000);
             }
         }
 
@@ -410,13 +286,9 @@
         }
 
         function obtenerColorEstado(estado) {
-            switch(estado) {
-                case 'jugando': return '#007bff';
-                case 'ganado': return '#28a745';
-                case 'perdido': return '#dc3545';
-                default: return '#666';
-            }
+            return '';
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

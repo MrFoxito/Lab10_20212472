@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
+
+
 public interface MovimientoRepository extends JpaRepository<Movimiento, Long> {
     List<Movimiento> findByIdMina(Long idMina);
     Movimiento findByCoordenadaXAndCoordenadaYAndIdMina(Integer x, Integer y, Long idMina);

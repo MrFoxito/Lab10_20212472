@@ -26,6 +26,9 @@ public class BuscaminasController {
         private String estadoJuego;
         private String mensaje;
 
+
+
+
         public GameResponse(Configuracion configuracion, Map<String, Movimiento> gridMap, 
                            String estadoJuego, String mensaje) {
             this.configuracion = configuracion;
@@ -42,6 +45,10 @@ public class BuscaminasController {
 
 
 
+
+
+
+
     @GetMapping("/buscaminas")
     public String mostrarJuego(Model model) {
         Configuracion config = buscaminasService.obtenerConfiguracion();
@@ -55,7 +62,11 @@ public class BuscaminasController {
                 gridMap.put(mov.getCoordenadaX() + "_" + mov.getCoordenadaY(), mov);
             }
         }
-        
+
+
+
+
+
         model.addAttribute("configuracion", config);
         model.addAttribute("movimientos", movimientos);
         model.addAttribute("gridMap", gridMap);
@@ -64,6 +75,10 @@ public class BuscaminasController {
         
         return "buscaminas";
     }
+
+
+
+
 
 
 
@@ -139,7 +154,8 @@ public class BuscaminasController {
                 gridMap.put(mov.getCoordenadaX() + "_" + mov.getCoordenadaY(), mov);
             }
         }
-        
+
+
         GameResponse response = new GameResponse(config, gridMap, estadoJuego, "");
         return ResponseEntity.ok(response);
     }
