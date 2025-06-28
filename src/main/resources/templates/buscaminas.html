@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscaminas - STF Games</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border: 2px solid #333;
+            padding: 20px;
+        }
+        
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .input-section {
+            margin-bottom: 20px;
+        }
+        
+        .input-label {
+            display: inline-block;
+            margin-right: 10px;
+            color: #666;
+        }
+        
+        .coordinate-input {
+            width: 100px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+        }
+        
+        .explotar-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .explotar-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .explotar-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .reiniciar-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        
+        .reiniciar-btn:hover {
+            background-color: #1e7e34;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 50px);
+            grid-template-rows: repeat(6, 50px);
+            gap: 1px;
+            margin: 20px 0;
+            border: 2px solid #333;
+            width: fit-content;
+        }
+        
+        .cell {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .cell:hover {
+            border-color: #007bff;
+            box-shadow: 0 0 3px rgba(0, 123, 255, 0.3);
+        }
+        
+        .cell-hidden {
+            background-color: #87CEEB; /* Azul claro como en las imágenes */
+        }
+        
+        .cell-revealed {
+            background-color: #90EE90; /* Verde claro como en las imágenes */
+        }
+        
+        .cell-bomb {
+            background-color: #FF69B4; /* Rosa como en las imágenes */
+        }
+        
+        .message {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .message-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .message-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Encuentre todo el cobre para ganar el juego</div>
+        
+        <div class="input-section">
+            <div>
+                <span class="input-label">Coordenada a explotar de la mina:</span>
+                <input type="text" id="coordenadas" class="coordinate-input" placeholder="ej: 1 5" required>
+                <button type="button" id="explotar-btn" class="explotar-btn">Explotar</button>
+                <button type="button" id="reiniciar-btn" class="reiniciar-btn">Nuevo Juego</button>
+            </div>
+        </div>
+        
+        <!-- Mensaje de estado -->
+        <div id="mensaje" class="message" style="display: none;">
+            <span id="mensaje-texto"></span>
+        </div>
+        
+        <!-- Grilla del juego -->
+        <div id="grid" class="grid">
+            <!-- Generar grilla de 6x6 -->
+            <div th:each="fila : ${#numbers.sequence(1, 6)}" th:remove="tag">
+                <div th:each="col : ${#numbers.sequence(1, 6)}" class="cell cell-hidden" 
+                     th:id="${'cell_' + fila + '_' + col}"
+                     th:data-x="${fila}" th:data-y="${col}">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información del juego -->
+        <div style="margin-top: 20px; color: #666;">
+            <p>Intentos restantes: <span id="intentos-restantes" th:text="${configuracion.cantIntentosActual}"></span></p>
+            <p>Estado del juego: <span id="estado-juego" th:text="${estadoJuego}"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let juegoActivo = true;
+
+        // Cargar estado inicial del juego
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarEstadoJuego();
+        });
+
+        // Event listeners
+        document.getElementById('explotar-btn').addEventListener('click', function() {
+            const coordenadas = document.getElementById('coordenadas').value.trim();
+            if (!coordenadas) {
+                mostrarMensaje('Por favor ingrese coordenadas', 'error');
+                return;
+            }
+
+            const coords = coordenadas.split(/\s+/);
+            if (coords.length !== 2) {
+                mostrarMensaje('Formato incorrecto. Use: x y (ejemplo: 1 5)', 'error');
+                return;
+            }
+
+            const x = parseInt(coords[0]);
+            const y = parseInt(coords[1]);
+
+            if (isNaN(x) || isNaN(y)) {
+                mostrarMensaje('Coordenadas inválidas. Use números enteros', 'error');
+                return;
+            }
+
+            if (x < 1 || x > 6 || y < 1 || y > 6) {
+                mostrarMensaje('Coordenadas fuera de rango. Use valores entre 1 y 6', 'error');
+                return;
+            }
+
+            if (!juegoActivo) {
+                mostrarMensaje('El juego ha terminado. Presione "Nuevo Juego" para comenzar otra partida', 'info');
+                return;
+            }
+
+            realizarMovimiento(x, y);
+        });
+
+        // Event listener para clic en celdas
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('cell') && e.target.classList.contains('cell-hidden')) {
+                const x = parseInt(e.target.getAttribute('data-x'));
+                const y = parseInt(e.target.getAttribute('data-y'));
+                
+                if (!juegoActivo) {
+                    mostrarMensaje('El juego ha terminado. Presione "Nuevo Juego" para comenzar otra partida', 'info');
+                    return;
+                }
+                
+                // Actualizar el input con las coordenadas
+                document.getElementById('coordenadas').value = `${x} ${y}`;
+                realizarMovimiento(x, y);
+            }
+        });
+
+        document.getElementById('reiniciar-btn').addEventListener('click', function() {
+            reiniciarJuego();
+        });
+
+        // Permitir explotar con Enter
+        document.getElementById('coordenadas').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('explotar-btn').click();
+            }
+        });
+
+        // Funciones AJAX
+        function cargarEstadoJuego() {
+            fetch('/api/buscaminas/estado')
+                .then(response => response.json())
+                .then(data => {
+                    actualizarInterfaz(data);
+                })
+                .catch(error => {
+                    console.error('Error al cargar estado del juego:', error);
+                    mostrarMensaje('Error al cargar el estado del juego', 'error');
+                });
+        }
+
+        function realizarMovimiento(x, y) {
+            const formData = new FormData();
+            formData.append('x', x);
+            formData.append('y', y);
+
+            fetch('/api/buscaminas/movimiento', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                actualizarInterfaz(data);
+                if (data.mensaje) {
+                    mostrarMensaje(data.mensaje, obtenerTipoMensaje(data.mensaje));
+                }
+                // Limpiar el input después de un movimiento exitoso
+                document.getElementById('coordenadas').value = '';
+            })
+            .catch(error => {
+                console.error('Error al realizar movimiento:', error);
+                mostrarMensaje('Error al realizar el movimiento', 'error');
+            });
+        }
+
+        function reiniciarJuego() {
+            fetch('/api/buscaminas/reiniciar', {
+                method: 'POST'
+            })
+            .then(response => response.text())
+            .then(data => {
+                // Limpiar la grilla
+                limpiarGridla();
+                // Cargar nuevo estado
+                cargarEstadoJuego();
+                // Ocultar mensaje
+                document.getElementById('mensaje').style.display = 'none';
+                // Limpiar input
+                document.getElementById('coordenadas').value = '';
+                // Reactivar juego
+                juegoActivo = true;
+                mostrarMensaje('¡Nuevo juego iniciado!', 'success');
+            })
+            .catch(error => {
+                console.error('Error al reiniciar juego:', error);
+                mostrarMensaje('Error al reiniciar el juego', 'error');
+            });
+        }
+
+        function actualizarInterfaz(data) {
+            // Actualizar información del juego
+            document.getElementById('intentos-restantes').textContent = data.configuracion.cantIntentosActual;
+            
+            // Actualizar estado del juego
+            const estadoElement = document.getElementById('estado-juego');
+            estadoElement.textContent = obtenerTextoEstado(data.estadoJuego);
+            estadoElement.style.color = obtenerColorEstado(data.estadoJuego);
+
+            // Verificar si el juego ha terminado
+            if (data.estadoJuego === 'ganado' || data.estadoJuego === 'perdido') {
+                juegoActivo = false;
+            } else {
+                juegoActivo = true;
+            }
+
+            // Actualizar grilla
+            actualizarGridla(data.gridMap);
+        }
+
+        function actualizarGridla(gridMap) {
+            for (let fila = 1; fila <= 6; fila++) {
+                for (let col = 1; col <= 6; col++) {
+                    const cellId = `cell_${fila}_${col}`;
+                    const cell = document.getElementById(cellId);
+                    const coordKey = `${fila}_${col}`;
+                    
+                    if (gridMap && gridMap[coordKey]) {
+                        const movimiento = gridMap[coordKey];
+                        
+                        // Limpiar clases previas
+                        cell.className = 'cell';
+                        
+                        if (movimiento.esBomba) {
+                            cell.classList.add('cell-bomb');
+                            cell.textContent = '💣';
+                        } else {
+                            cell.classList.add('cell-revealed');
+                            cell.textContent = movimiento.numeroVecinas > 0 ? movimiento.numeroVecinas : '';
+                        }
+                    } else {
+                        // Celda no descubierta
+                        cell.className = 'cell cell-hidden';
+                        cell.textContent = '';
+                    }
+                }
+            }
+        }
+
+        function limpiarGridla() {
+            for (let fila = 1; fila <= 6; fila++) {
+                for (let col = 1; col <= 6; col++) {
+                    const cellId = `cell_${fila}_${col}`;
+                    const cell = document.getElementById(cellId);
+                    cell.className = 'cell cell-hidden';
+                    cell.textContent = '';
+                }
+            }
+        }
+
+        function mostrarMensaje(texto, tipo) {
+            const mensajeDiv = document.getElementById('mensaje');
+            const mensajeTexto = document.getElementById('mensaje-texto');
+            
+            mensajeTexto.textContent = texto;
+            mensajeDiv.className = `message message-${tipo}`;
+            mensajeDiv.style.display = 'block';
+            
+            // Auto-ocultar después de 5 segundos para mensajes de error
+            if (tipo === 'error') {
+                setTimeout(() => {
+                    mensajeDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function obtenerTipoMensaje(mensaje) {
+            if (mensaje.includes('ganado')) return 'success';
+            if (mensaje.includes('perdido')) return 'danger';
+            if (mensaje.includes('bomba')) return 'warning';
+            if (mensaje.includes('Error') || mensaje.includes('incorrecto') || mensaje.includes('inválidas')) return 'danger';
+            return 'info';
+        }
+
+        function obtenerTextoEstado(estado) {
+            switch(estado) {
+                case 'jugando': return 'En progreso';
+                case 'ganado': return '¡Ganaste!';
+                case 'perdido': return '¡Perdiste!';
+                default: return estado;
+            }
+        }
+
+        function obtenerColorEstado(estado) {
+            switch(estado) {
+                case 'jugando': return '#007bff';
+                case 'ganado': return '#28a745';
+                case 'perdido': return '#dc3545';
+                default: return '#666';
+            }
+        }
+    </script>
+</body>
+</html>
